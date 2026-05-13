@@ -1,4 +1,4 @@
-# k8said
+# k8s-aid
 
 [![CI](https://github.com/iasolanki/k8said/actions/workflows/ci.yml/badge.svg)](https://github.com/iasolanki/k8said/actions/workflows/ci.yml)
 [![Release](https://github.com/iasolanki/k8said/actions/workflows/release.yml/badge.svg)](https://github.com/iasolanki/k8said/actions/workflows/release.yml)
