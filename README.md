@@ -1,5 +1,11 @@
 # kubewhy
 
+[![CI](https://github.com/iasolanki/kubewhy/actions/workflows/ci.yml/badge.svg)](https://github.com/iasolanki/kubewhy/actions/workflows/ci.yml)
+[![Release](https://github.com/iasolanki/kubewhy/actions/workflows/release.yml/badge.svg)](https://github.com/iasolanki/kubewhy/actions/workflows/release.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/iasolanki/kubewhy)](go.mod)
+[![pkg.go.dev](https://pkg.go.dev/badge/github.com/iasolanki/kubewhy.svg)](https://pkg.go.dev/github.com/iasolanki/kubewhy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 AI-powered Kubernetes pod diagnosis. Point it at a broken pod, get a plain-English root-cause analysis and fix steps — powered by Claude.
 
 ```
@@ -41,14 +47,40 @@ It handles:
 
 ## Requirements
 
-- Go 1.22+
 - A running Kubernetes cluster with `kubectl` configured (`~/.kube/config` or `KUBECONFIG`)
 - An Anthropic API key in `ANTHROPIC_API_KEY`
 
 ## Install
 
+**macOS / Linux — download binary (no Go required):**
+
 ```bash
-git clone https://github.com/yourname/kubewhy
+# macOS Apple Silicon
+curl -L https://github.com/iasolanki/kubewhy/releases/latest/download/kubewhy-darwin-arm64 -o kubewhy
+
+# macOS Intel
+curl -L https://github.com/iasolanki/kubewhy/releases/latest/download/kubewhy-darwin-amd64 -o kubewhy
+
+# Linux amd64
+curl -L https://github.com/iasolanki/kubewhy/releases/latest/download/kubewhy-linux-amd64 -o kubewhy
+```
+
+Then make it executable and move it to your PATH:
+
+```bash
+chmod +x kubewhy && sudo mv kubewhy /usr/local/bin/
+```
+
+**Go install (requires Go 1.22+):**
+
+```bash
+go install github.com/iasolanki/kubewhy@latest
+```
+
+**Build from source:**
+
+```bash
+git clone https://github.com/iasolanki/kubewhy
 cd kubewhy
 go build -o kubewhy .
 sudo mv kubewhy /usr/local/bin/
@@ -84,7 +116,7 @@ Two helper scripts spin up a disposable minikube cluster pre-loaded with broken 
 ./setup_minikube.sh
 
 # 2. Deploy seven intentionally broken pods to the k8s-diagnose namespace
-./setup_broken_pods.sh
+./examples/setup_broken_pods.sh
 
 # 3. Watch them fail
 kubectl get pods -n k8s-diagnose -w
@@ -93,7 +125,7 @@ kubectl get pods -n k8s-diagnose -w
 kubewhy diagnose --all -n k8s-diagnose
 ```
 
-Workloads deployed by `setup_broken_pods.sh`:
+Workloads deployed by `examples/setup_broken_pods.sh`:
 
 | Deployment | Failure mode |
 |---|---|
@@ -104,6 +136,19 @@ Workloads deployed by `setup_broken_pods.sh`:
 | `config-missing` | References a ConfigMap that doesn't exist |
 | `bad-probe` | nginx with a `/healthz` liveness probe that always 404s |
 | `init-fail` | Init container can't reach its dependency and exits 1 |
+
+## Preflight example
+
+`examples/preflight_example.sh` demonstrates two common immutable field conflicts:
+
+```bash
+./examples/preflight_example.sh
+```
+
+| Scenario | What changes | Why it fails |
+|---|---|---|
+| StatefulSet | `volumeClaimTemplates` storage 1Gi → 2Gi | PVC spec is immutable after creation |
+| Deployment | `selector` label `demo-v1` → `demo-v2` | Selector is immutable after creation |
 
 ## Environment variables
 

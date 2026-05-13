@@ -1,0 +1,56 @@
+name: Bug Report
+description: Something isn't working as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Fill in as much as you can.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you run and what did you see?
+      placeholder: |
+        kubewhy diagnose my-pod -n my-namespace
+        error: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: input
+    id: kubewhy-version
+    attributes:
+      label: kubewhy version
+      placeholder: kubewhy version
+    validations:
+      required: true
+
+  - type: input
+    id: go-version
+    attributes:
+      label: Go version
+      placeholder: go version
+    validations:
+      required: false
+
+  - type: input
+    id: kubectl-version
+    attributes:
+      label: kubectl / cluster version
+      placeholder: kubectl version --short
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Anything else that might be relevant (cluster type, Helm version, etc.)

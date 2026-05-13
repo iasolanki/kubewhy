@@ -1,13 +1,4 @@
-// diagnose.go — AI-powered Kubernetes pod diagnosis
-//
-// Usage:
-//   go build -o kubewhy .
-//   kubewhy diagnose <pod-name> [--namespace k8s-diagnose]
-//   kubewhy diagnose --all    [--namespace k8s-diagnose]
-//
-// Dependencies (resolved by go mod tidy):
-//   github.com/anthropics/anthropic-sdk-go
-//   k8s.io/client-go
+// diagnose.go — pod snapshot collection and Claude-powered diagnosis
 
 package main
 
@@ -15,13 +6,12 @@ import (
 	"context"
 	"fmt"
 	"os"
-
-	flag "github.com/spf13/pflag"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
+	flag "github.com/spf13/pflag"
 	anthropic "github.com/anthropics/anthropic-sdk-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,8 +20,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
-
-var version = "dev"
 
 // ── data model ───────────────────────────────────────────────────────────────
 
@@ -336,45 +324,6 @@ func buildPrompt(snaps []podSnapshot) string {
 
 	sb.WriteString("For each pod: state the diagnosis (1-2 sentences), then list concrete fix steps.\n")
 	return sb.String()
-}
-
-// ── main ──────────────────────────────────────────────────────────────────────
-
-func usage() {
-	fmt.Fprintf(os.Stderr, `kubewhy — AI-powered Kubernetes pod diagnosis
-
-Usage:
-  kubewhy diagnose <pod-name> [flags]   diagnose a specific pod
-  kubewhy diagnose --all     [flags]   diagnose all broken pods in namespace
-
-Flags:
-  -n, --namespace string   Kubernetes namespace (default "default")
-      --all                Scan and diagnose all broken pods
-
-Examples:
-  kubewhy diagnose crash-loop-abc123 --namespace k8s-diagnose
-  kubewhy diagnose --all --namespace k8s-diagnose
-`)
-}
-
-func main() {
-	if len(os.Args) < 2 {
-		usage()
-		os.Exit(1)
-	}
-
-	switch os.Args[1] {
-	case "diagnose":
-		runDiagnose(os.Args[2:])
-	case "version", "--version", "-v":
-		fmt.Println("kubewhy", version)
-	case "help", "--help", "-h":
-		usage()
-	default:
-		fmt.Fprintf(os.Stderr, "unknown command %q\n\n", os.Args[1])
-		usage()
-		os.Exit(1)
-	}
 }
 
 func runDiagnose(args []string) {
