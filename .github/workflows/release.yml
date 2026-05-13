@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     name: Build & Release
@@ -42,7 +45,7 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: "0"
         run: |
-          ASSET="kubewhy-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
+          ASSET="k8said-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
           go build -trimpath -ldflags="-s -w -X main.version=${{ github.ref_name }}" \
             -o "$ASSET" .
           echo "ASSET=$ASSET" >> "$GITHUB_ENV"
@@ -50,7 +53,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kubewhy-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: k8said-${{ matrix.goos }}-${{ matrix.goarch }}
           path: ${{ env.ASSET }}
           retention-days: 1
 
@@ -67,12 +70,12 @@ jobs:
 
       - name: Generate checksums
         working-directory: dist
-        run: sha256sum kubewhy-* > checksums.txt
+        run: sha256sum k8said-* > checksums.txt
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            dist/kubewhy-*
+            dist/k8said-*
             dist/checksums.txt
