@@ -1,4 +1,4 @@
-module kubewhy
+module github.com/iasolanki/kubewhy
 
 go 1.26.0
 
