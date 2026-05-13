@@ -1,15 +1,15 @@
-# kubewhy
+# k8said
 
-[![CI](https://github.com/iasolanki/kubewhy/actions/workflows/ci.yml/badge.svg)](https://github.com/iasolanki/kubewhy/actions/workflows/ci.yml)
-[![Release](https://github.com/iasolanki/kubewhy/actions/workflows/release.yml/badge.svg)](https://github.com/iasolanki/kubewhy/actions/workflows/release.yml)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/iasolanki/kubewhy)](go.mod)
-[![pkg.go.dev](https://pkg.go.dev/badge/github.com/iasolanki/kubewhy.svg)](https://pkg.go.dev/github.com/iasolanki/kubewhy)
+[![CI](https://github.com/iasolanki/k8said/actions/workflows/ci.yml/badge.svg)](https://github.com/iasolanki/k8said/actions/workflows/ci.yml)
+[![Release](https://github.com/iasolanki/k8said/actions/workflows/release.yml/badge.svg)](https://github.com/iasolanki/k8said/actions/workflows/release.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/iasolanki/k8said)](go.mod)
+[![pkg.go.dev](https://pkg.go.dev/badge/github.com/iasolanki/k8said.svg)](https://pkg.go.dev/github.com/iasolanki/k8said)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 AI-powered Kubernetes pod diagnosis. Point it at a broken pod, get a plain-English root-cause analysis and fix steps — powered by Claude.
 
 ```
-$ kubewhy diagnose crash-loop-5ff7b4885c-jzcn5 --namespace k8s-diagnose
+$ k8said diagnose crash-loop-5ff7b4885c-jzcn5 --namespace k8s-diagnose
 
 Collecting snapshots...
   • crash-loop-5ff7b4885c-jzcn5 (Running)
@@ -31,7 +31,7 @@ missing configuration file. Kubernetes keeps restarting it, producing CrashLoopB
 
 ## What it does
 
-`kubewhy` collects everything Kubernetes knows about a broken pod — container states, restart history, events, and recent logs — then sends it to Claude (claude-opus-4-7 with adaptive thinking) and streams the diagnosis back to your terminal.
+`k8said` collects everything Kubernetes knows about a broken pod — container states, restart history, events, and recent logs — then sends it to Claude (claude-opus-4-7 with adaptive thinking) and streams the diagnosis back to your terminal.
 
 It handles:
 
@@ -56,45 +56,45 @@ It handles:
 
 ```bash
 # macOS Apple Silicon
-curl -L https://github.com/iasolanki/kubewhy/releases/latest/download/kubewhy-darwin-arm64 -o kubewhy
+curl -L https://github.com/iasolanki/k8said/releases/latest/download/k8said-darwin-arm64 -o k8said
 
 # macOS Intel
-curl -L https://github.com/iasolanki/kubewhy/releases/latest/download/kubewhy-darwin-amd64 -o kubewhy
+curl -L https://github.com/iasolanki/k8said/releases/latest/download/k8said-darwin-amd64 -o k8said
 
 # Linux amd64
-curl -L https://github.com/iasolanki/kubewhy/releases/latest/download/kubewhy-linux-amd64 -o kubewhy
+curl -L https://github.com/iasolanki/k8said/releases/latest/download/k8said-linux-amd64 -o k8said
 ```
 
 Then make it executable and move it to your PATH:
 
 ```bash
-chmod +x kubewhy && sudo mv kubewhy /usr/local/bin/
+chmod +x k8said && sudo mv k8said /usr/local/bin/
 ```
 
 **Go install (requires Go 1.22+):**
 
 ```bash
-go install github.com/iasolanki/kubewhy@latest
+go install github.com/iasolanki/k8said@latest
 ```
 
 **Build from source:**
 
 ```bash
-git clone https://github.com/iasolanki/kubewhy
-cd kubewhy
-go build -o kubewhy .
-sudo mv kubewhy /usr/local/bin/
+git clone https://github.com/iasolanki/k8said
+cd k8said
+go build -o k8said .
+sudo mv k8said /usr/local/bin/
 ```
 
 ## Usage
 
 ```bash
 # diagnose a specific pod
-kubewhy diagnose <pod-name> --namespace <namespace>
-kubewhy diagnose <pod-name> -n <namespace>
+k8said diagnose <pod-name> --namespace <namespace>
+k8said diagnose <pod-name> -n <namespace>
 
 # diagnose every broken pod in a namespace
-kubewhy diagnose --all --namespace <namespace>
+k8said diagnose --all --namespace <namespace>
 ```
 
 The pod name can be a full name from `kubectl get pods`:
@@ -104,7 +104,7 @@ kubectl get pods -n k8s-diagnose
 # NAME                            READY   STATUS             RESTARTS
 # crash-loop-5ff7b4885c-jzcn5    0/1     CrashLoopBackOff   7
 
-kubewhy diagnose crash-loop-5ff7b4885c-jzcn5 -n k8s-diagnose
+k8said diagnose crash-loop-5ff7b4885c-jzcn5 -n k8s-diagnose
 ```
 
 ## Local test cluster
@@ -112,7 +112,7 @@ kubewhy diagnose crash-loop-5ff7b4885c-jzcn5 -n k8s-diagnose
 Two helper scripts spin up a disposable minikube cluster pre-loaded with broken workloads:
 
 ```bash
-# 1. Start a local minikube cluster named "kubewhy"
+# 1. Start a local minikube cluster named "k8said"
 ./setup_minikube.sh
 
 # 2. Deploy seven intentionally broken pods to the k8s-diagnose namespace
@@ -122,7 +122,7 @@ Two helper scripts spin up a disposable minikube cluster pre-loaded with broken 
 kubectl get pods -n k8s-diagnose -w
 
 # 4. Diagnose one
-kubewhy diagnose --all -n k8s-diagnose
+k8said diagnose --all -n k8s-diagnose
 ```
 
 Workloads deployed by `examples/setup_broken_pods.sh`:

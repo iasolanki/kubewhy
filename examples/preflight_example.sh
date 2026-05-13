@@ -1,5 +1,5 @@
 #!/bin/bash
-# preflight_example.sh — demonstrates kubewhy preflight catching immutable field conflicts
+# preflight_example.sh — demonstrates k8said preflight catching immutable field conflicts
 #
 # This script simulates two common real-world scenarios where kubectl apply / helm upgrade
 # would fail silently or get stuck:
@@ -13,8 +13,8 @@
 
 set -euo pipefail
 
-NAMESPACE="kubewhy-preflight-demo"
-KUBEWHY="${KUBEWHY:-kubewhy}"   # override with KUBEWHY=./kubewhy if not in PATH
+NAMESPACE="k8said-preflight-demo"
+K8SAID="${K8SAID:-k8said}"   # override with K8SAID=./k8said if not in PATH
 
 info()  { echo ""; echo "  [info] $*"; }
 ok()    { echo "  [ok]   $*"; }
@@ -22,11 +22,11 @@ step()  { echo ""; echo "══════════════════�
 
 # ── preflight ─────────────────────────────────────────────────────────────────
 command -v kubectl &>/dev/null || { echo "kubectl not found"; exit 1; }
-command -v "$KUBEWHY" &>/dev/null || { echo "'$KUBEWHY' not found — run: go install github.com/iasolanki/kubewhy@latest"; exit 1; }
+command -v "$K8SAID" &>/dev/null || { echo "'$K8SAID' not found — run: go install github.com/iasolanki/k8said@latest"; exit 1; }
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
-echo "║   kubewhy preflight — example script     ║"
+echo "║   k8said preflight — example script     ║"
 echo "╚══════════════════════════════════════════╝"
 
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
@@ -73,7 +73,7 @@ EOF
 ok "StatefulSet deployed with storage: 1Gi"
 
 # Write the updated manifest (2Gi — immutable change)
-UPDATED_STS=$(mktemp /tmp/kubewhy-sts-XXXXXX.yaml)
+UPDATED_STS=$(mktemp /tmp/k8said-sts-XXXXXX.yaml)
 cat > "$UPDATED_STS" <<'EOF'
 apiVersion: apps/v1
 kind: StatefulSet
@@ -112,7 +112,7 @@ EOF
 
 info "Running preflight check against updated manifest (storage: 1Gi → 2Gi)..."
 echo ""
-"$KUBEWHY" preflight -f "$UPDATED_STS" -n "$NAMESPACE" || true
+"$K8SAID" preflight -f "$UPDATED_STS" -n "$NAMESPACE" || true
 rm -f "$UPDATED_STS"
 
 # ── Scenario 2: Deployment selector label change ──────────────────────────────
@@ -144,7 +144,7 @@ spec:
 EOF
 ok "Deployment deployed with selector app=demo-v1"
 
-UPDATED_DEPLOY=$(mktemp /tmp/kubewhy-deploy-XXXXXX.yaml)
+UPDATED_DEPLOY=$(mktemp /tmp/k8said-deploy-XXXXXX.yaml)
 cat > "$UPDATED_DEPLOY" <<'EOF'
 apiVersion: apps/v1
 kind: Deployment
@@ -171,7 +171,7 @@ EOF
 
 info "Running preflight check against updated manifest (selector: demo-v1 → demo-v2)..."
 echo ""
-"$KUBEWHY" preflight -f "$UPDATED_DEPLOY" -n "$NAMESPACE" || true
+"$K8SAID" preflight -f "$UPDATED_DEPLOY" -n "$NAMESPACE" || true
 rm -f "$UPDATED_DEPLOY"
 
 # ── cleanup ───────────────────────────────────────────────────────────────────
@@ -181,9 +181,9 @@ kubectl delete namespace "$NAMESPACE" --ignore-not-found
 ok "Done."
 
 echo ""
-echo "To use --fix and let kubewhy delete and re-apply automatically:"
-echo "  kubewhy preflight -f your-manifest.yaml -n your-namespace --fix"
+echo "To use --fix and let k8said delete and re-apply automatically:"
+echo "  k8said preflight -f your-manifest.yaml -n your-namespace --fix"
 echo ""
 echo "Works with helm too:"
-echo "  helm template my-release ./chart | kubewhy preflight -f - -n your-namespace"
+echo "  helm template my-release ./chart | k8said preflight -f - -n your-namespace"
 echo ""

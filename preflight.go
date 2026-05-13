@@ -63,8 +63,8 @@ func runPreflight(args []string) {
 	fix := fs.Bool("fix", false, "Delete conflicting resources and re-apply after confirmation")
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage:
-  kubewhy preflight -f <manifest> [-n <namespace>] [--fix]
-  helm template my-release ./chart | kubewhy preflight -f -
+  k8said preflight -f <manifest> [-n <namespace>] [--fix]
+  helm template my-release ./chart | k8said preflight -f -
 
 Flags:
 `)
@@ -83,7 +83,7 @@ Flags:
 	// If reading from stdin, buffer to a temp file so we can re-apply later
 	manifestPath := *file
 	if *file == "-" {
-		tmp, err := os.CreateTemp("", "kubewhy-preflight-*.yaml")
+		tmp, err := os.CreateTemp("", "k8said-preflight-*.yaml")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)

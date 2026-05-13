@@ -13,7 +13,7 @@ body:
       label: What happened?
       description: What did you run and what did you see?
       placeholder: |
-        kubewhy diagnose my-pod -n my-namespace
+        k8said diagnose my-pod -n my-namespace
         error: ...
     validations:
       required: true
@@ -26,10 +26,10 @@ body:
       required: true
 
   - type: input
-    id: kubewhy-version
+    id: k8said-version
     attributes:
-      label: kubewhy version
-      placeholder: kubewhy version
+      label: k8said version
+      placeholder: k8said version
     validations:
       required: true
 

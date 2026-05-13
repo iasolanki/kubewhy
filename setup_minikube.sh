@@ -1,5 +1,5 @@
 #!/bin/bash
-# setup_minikube.sh — start a local minikube cluster ready for kubewhy
+# setup_minikube.sh — start a local minikube cluster ready for k8said
 #
 # Usage:
 #   chmod +x setup_minikube.sh
@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-CLUSTER_NAME="kubewhy"
+CLUSTER_NAME="k8said"
 CPUS=2
 MEMORY="4096"   # MB
 DRIVER=""       # auto-detect below
@@ -24,7 +24,7 @@ require() {
 # ── preflight ─────────────────────────────────────────────────────────────
 echo ""
 echo "╔══════════════════════════════════════════╗"
-echo "║   kubewhy — minikube cluster setup       ║"
+echo "║   k8said — minikube cluster setup       ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 

@@ -1,4 +1,4 @@
-module github.com/iasolanki/kubewhy
+module github.com/iasolanki/k8said
 
 go 1.26.0
 

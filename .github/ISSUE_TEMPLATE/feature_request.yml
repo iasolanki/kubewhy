@@ -11,7 +11,7 @@ body:
     id: problem
     attributes:
       label: What problem does this solve?
-      placeholder: I keep having to manually... / kubewhy doesn't handle...
+      placeholder: I keep having to manually... / k8said doesn't handle...
     validations:
       required: true
 

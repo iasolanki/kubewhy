@@ -1,4 +1,4 @@
-# Contributing to kubewhy
+# Contributing to k8said
 
 Thanks for your interest. This document covers how to set up a dev environment, run the examples, and submit a PR.
 
@@ -12,16 +12,16 @@ Thanks for your interest. This document covers how to set up a dev environment, 
 ## Local setup
 
 ```bash
-git clone https://github.com/iasolanki/kubewhy
-cd kubewhy
-make build          # produces ./kubewhy binary
-./kubewhy --help
+git clone https://github.com/iasolanki/k8said
+cd k8said
+make build          # produces ./k8said binary
+./k8said --help
 ```
 
 ## Spin up a test cluster
 
 ```bash
-./setup_minikube.sh              # starts a local minikube cluster named "kubewhy"
+./setup_minikube.sh              # starts a local minikube cluster named "k8said"
 ./examples/setup_broken_pods.sh  # deploys seven broken workloads to k8s-diagnose namespace
 ```
 
@@ -29,10 +29,10 @@ make build          # produces ./kubewhy binary
 
 ```bash
 # diagnose a specific broken pod
-./kubewhy diagnose <pod-name> -n k8s-diagnose
+./k8said diagnose <pod-name> -n k8s-diagnose
 
 # diagnose all broken pods
-./kubewhy diagnose --all -n k8s-diagnose
+./k8said diagnose --all -n k8s-diagnose
 
 # check a manifest for immutable field conflicts
 ./examples/preflight_example.sh
