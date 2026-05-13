@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	flag "github.com/spf13/pflag"
 	anthropic "github.com/anthropics/anthropic-sdk-go"
+	flag "github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -24,10 +24,10 @@ import (
 // ── data model ───────────────────────────────────────────────────────────────
 
 type stateSnap struct {
-	Reason    string `json:"reason,omitempty"`
-	Message   string `json:"message,omitempty"`
-	ExitCode  int32  `json:"exit_code,omitempty"`
-	StartedAt string `json:"started_at,omitempty"`
+	Reason     string `json:"reason,omitempty"`
+	Message    string `json:"message,omitempty"`
+	ExitCode   int32  `json:"exit_code,omitempty"`
+	StartedAt  string `json:"started_at,omitempty"`
 	FinishedAt string `json:"finished_at,omitempty"`
 }
 
@@ -55,13 +55,13 @@ type eventSnap struct {
 }
 
 type podSnapshot struct {
-	Name           string          `json:"name"`
-	Namespace      string          `json:"namespace"`
-	Phase          string          `json:"phase"`
-	Conditions     []conditionSnap `json:"conditions"`
-	InitContainers []containerSnap `json:"init_containers,omitempty"`
-	Containers     []containerSnap `json:"containers"`
-	Events         []eventSnap     `json:"events"`
+	Name           string            `json:"name"`
+	Namespace      string            `json:"namespace"`
+	Phase          string            `json:"phase"`
+	Conditions     []conditionSnap   `json:"conditions"`
+	InitContainers []containerSnap   `json:"init_containers,omitempty"`
+	Containers     []containerSnap   `json:"containers"`
+	Events         []eventSnap       `json:"events"`
 	Logs           map[string]string `json:"logs"`
 }
 
@@ -259,8 +259,8 @@ func buildPrompt(snaps []podSnapshot) string {
 	sb.WriteString("You are diagnosing broken Kubernetes pods. For each pod below, identify the root cause and provide specific remediation steps.\n\n")
 
 	for i, s := range snaps {
-		sb.WriteString(fmt.Sprintf("## Pod %d: %s (namespace: %s)\n", i+1, s.Name, s.Namespace))
-		sb.WriteString(fmt.Sprintf("Phase: %s\n\n", s.Phase))
+		fmt.Fprintf(&sb, "## Pod %d: %s (namespace: %s)\n", i+1, s.Name, s.Namespace)
+		fmt.Fprintf(&sb, "Phase: %s\n\n", s.Phase)
 
 		if len(s.Conditions) > 0 {
 			sb.WriteString("### Conditions\n")
@@ -281,22 +281,22 @@ func buildPrompt(snaps []podSnapshot) string {
 			if len(containers) == 0 {
 				return
 			}
-			sb.WriteString(fmt.Sprintf("### %s\n", label))
+			fmt.Fprintf(&sb, "### %s\n", label)
 			for _, c := range containers {
-				sb.WriteString(fmt.Sprintf("- **%s** (image: %s, restarts: %d, ready: %v)\n",
-					c.Name, c.Image, c.RestartCount, c.Ready))
+				fmt.Fprintf(&sb, "- **%s** (image: %s, restarts: %d, ready: %v)\n",
+					c.Name, c.Image, c.RestartCount, c.Ready)
 				if c.State.Reason != "" {
-					sb.WriteString(fmt.Sprintf("  State: %s", c.State.Reason))
+					fmt.Fprintf(&sb, "  State: %s", c.State.Reason)
 					if c.State.Message != "" {
-						sb.WriteString(fmt.Sprintf(" — %s", c.State.Message))
+						fmt.Fprintf(&sb, " — %s", c.State.Message)
 					}
 					if c.State.ExitCode != 0 {
-						sb.WriteString(fmt.Sprintf(" (exit %d)", c.State.ExitCode))
+						fmt.Fprintf(&sb, " (exit %d)", c.State.ExitCode)
 					}
 					sb.WriteString("\n")
 				}
 				if c.LastState.Reason != "" {
-					sb.WriteString(fmt.Sprintf("  Last: %s (exit %d)\n", c.LastState.Reason, c.LastState.ExitCode))
+					fmt.Fprintf(&sb, "  Last: %s (exit %d)\n", c.LastState.Reason, c.LastState.ExitCode)
 				}
 			}
 			sb.WriteString("\n")
@@ -307,7 +307,7 @@ func buildPrompt(snaps []podSnapshot) string {
 		if len(s.Events) > 0 {
 			sb.WriteString("### Recent Events\n")
 			for _, e := range s.Events {
-				sb.WriteString(fmt.Sprintf("- [%s] %s (×%d, %s ago)\n", e.Reason, e.Message, e.Count, e.Age))
+				fmt.Fprintf(&sb, "- [%s] %s (×%d, %s ago)\n", e.Reason, e.Message, e.Count, e.Age)
 			}
 			sb.WriteString("\n")
 		}
@@ -315,7 +315,7 @@ func buildPrompt(snaps []podSnapshot) string {
 		if len(s.Logs) > 0 {
 			sb.WriteString("### Logs\n")
 			for key, text := range s.Logs {
-				sb.WriteString(fmt.Sprintf("**%s:**\n```\n%s\n```\n\n", key, text))
+				fmt.Fprintf(&sb, "**%s:**\n```\n%s\n```\n\n", key, text)
 			}
 		}
 

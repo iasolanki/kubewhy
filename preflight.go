@@ -88,13 +88,13 @@ Flags:
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		defer os.Remove(tmp.Name())
+		defer os.Remove(tmp.Name()) //nolint:errcheck
 
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
-			fmt.Fprintln(tmp, scanner.Text())
+			_, _ = fmt.Fprintln(tmp, scanner.Text())
 		}
-		tmp.Close()
+		_ = tmp.Close()
 		manifestPath = tmp.Name()
 	}
 
@@ -161,7 +161,7 @@ Flags:
 	// ── auto-fix ──────────────────────────────────────────────────────────────
 	fmt.Print("Proceed with deletion and re-apply? [y/N] ")
 	var answer string
-	fmt.Scanln(&answer)
+	_, _ = fmt.Scanln(&answer)
 	if strings.ToLower(strings.TrimSpace(answer)) != "y" {
 		fmt.Println("Aborted.")
 		os.Exit(1)

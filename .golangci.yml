@@ -1,5 +1,4 @@
-run:
-  go: "1.24"
+version: "2"
 
 linters:
   enable:
@@ -7,16 +6,16 @@ linters:
     - govet
     - staticcheck
     - unused
-    - gosimple
-    - gofmt
     - misspell
 
-linters-settings:
-  gofmt:
-    simplify: true
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: true
 
 issues:
   exclude-rules:
-    # exit calls in main are intentional
     - path: main\.go
       linters: [gocritic]
