@@ -31,6 +31,8 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+var version = "dev"
+
 // ── data model ───────────────────────────────────────────────────────────────
 
 type stateSnap struct {
@@ -364,6 +366,8 @@ func main() {
 	switch os.Args[1] {
 	case "diagnose":
 		runDiagnose(os.Args[2:])
+	case "version", "--version", "-v":
+		fmt.Println("kubewhy", version)
 	case "help", "--help", "-h":
 		usage()
 	default:
