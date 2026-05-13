@@ -14,8 +14,3 @@ formatters:
   settings:
     gofmt:
       simplify: true
-
-issues:
-  exclude-rules:
-    - path: main\.go
-      linters: [gocritic]
