@@ -23,8 +23,8 @@ func Execute(version string) {
 		runDiagnose(os.Args[2:])
 	case "preflight":
 		runPreflight(os.Args[2:])
-	case "apply":
-		runApply(os.Args[2:])
+	case "wave":
+		runWave(os.Args[2:])
 	case "version", "--version", "-v":
 		fmt.Println("k8said", Version)
 	case "help", "--help", "-h":
@@ -43,14 +43,14 @@ Usage:
   k8said diagnose <pod-name> [flags]   diagnose a specific pod
   k8said diagnose --all     [flags]   diagnose all broken pods in namespace
   k8said preflight -f <manifest>       check for immutable field conflicts before applying
-  k8said apply    -f <plan.yaml>       apply manifests in ordered waves
-  k8said apply    -f <plan.yaml> --analyze   AI review before applying
+  k8said wave     -f <plan.yaml>       apply manifests in ordered waves
+  k8said wave     -f <plan.yaml> --analyze   AI review before applying
 
 Examples:
   k8said diagnose crash-loop-abc123 --namespace k8s-diagnose
   k8said diagnose --all --namespace k8s-diagnose
   k8said preflight -f deploy.yaml -n staging --fix
-  k8said apply -f plan.yaml
-  k8said apply -f plan.yaml --dry-run
+  k8said wave -f plan.yaml
+  k8said wave -f plan.yaml --dry-run
 `)
 }

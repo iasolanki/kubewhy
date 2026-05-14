@@ -168,7 +168,7 @@ func refsFromPodSpec(spec map[string]interface{}, usedBy string, waveIdx int, wa
 // CheckRefs scans every manifest in the plan, finds ConfigMap/Secret references
 // inside workloads, and verifies each ref is either defined in the plan (in an
 // earlier or equal wave) or exists in the cluster.
-func CheckRefs(plan applyPlan) []refIssue {
+func CheckRefs(plan wavePlan) []refIssue {
 	type defined struct {
 		waveIdx  int
 		waveName string
