@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"bufio"
@@ -59,7 +59,7 @@ func parseViolations(output, ns string) []violation {
 func runPreflight(args []string) {
 	fs := flag.NewFlagSet("preflight", flag.ExitOnError)
 	ns := fs.StringP("namespace", "n", "", "Kubernetes namespace")
-	file := fs.StringP("file", "f", "", `Manifest file to check (use - for stdin)`)
+	file := fs.StringP("file", "f", "", "Manifest file to check (use - for stdin)")
 	fix := fs.Bool("fix", false, "Delete conflicting resources and re-apply after confirmation")
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage:
@@ -80,7 +80,6 @@ Flags:
 		os.Exit(1)
 	}
 
-	// If reading from stdin, buffer to a temp file so we can re-apply later
 	manifestPath := *file
 	if *file == "-" {
 		tmp, err := os.CreateTemp("", "k8said-preflight-*.yaml")
@@ -98,7 +97,6 @@ Flags:
 		manifestPath = tmp.Name()
 	}
 
-	// ── dry-run ───────────────────────────────────────────────────────────────
 	dryArgs := []string{"apply", "--dry-run=server", "-f", manifestPath}
 	if *ns != "" {
 		dryArgs = append(dryArgs, "-n", *ns)
@@ -120,11 +118,9 @@ Flags:
 		return
 	}
 
-	// ── parse violations ──────────────────────────────────────────────────────
 	violations := parseViolations(combined, *ns)
 
 	if len(violations) == 0 {
-		// Some other error — just surface it
 		fmt.Fprintln(os.Stderr, strings.TrimSpace(stderr.String()))
 		os.Exit(1)
 	}
@@ -158,7 +154,6 @@ Flags:
 		os.Exit(1)
 	}
 
-	// ── auto-fix ──────────────────────────────────────────────────────────────
 	fmt.Print("Proceed with deletion and re-apply? [y/N] ")
 	var answer string
 	_, _ = fmt.Scanln(&answer)
@@ -181,7 +176,6 @@ Flags:
 		}
 	}
 
-	// re-apply
 	applyArgs := []string{"apply", "-f", manifestPath}
 	if *ns != "" {
 		applyArgs = append(applyArgs, "-n", *ns)

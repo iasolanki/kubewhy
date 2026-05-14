@@ -1,0 +1,20 @@
+namespace: staging
+timeout: 120s
+
+waves:
+  - name: infrastructure
+    manifests:
+      - manifests/namespace.yaml
+      - manifests/configmap.yaml
+      - manifests/secret.yaml
+
+  - name: data
+    manifests:
+      - manifests/postgres-statefulset.yaml
+      - manifests/redis-deployment.yaml
+
+  - name: app
+    manifests:
+      - manifests/deployment.yaml
+      - manifests/service.yaml
+      - manifests/ingress.yaml
