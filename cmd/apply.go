@@ -3,12 +3,14 @@ package cmd
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
+	anthropic "github.com/anthropics/anthropic-sdk-go"
 	flag "github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
 )
@@ -84,14 +86,131 @@ func waitForResource(r appliedResource, timeout string) error {
 	return nil
 }
 
+// buildAnalysisPrompt assembles a prompt that includes the full plan structure,
+// pre-checked reference findings, and the raw YAML of every manifest.
+func buildAnalysisPrompt(plan applyPlan, refIssues []refIssue) string {
+	var sb strings.Builder
+
+	sb.WriteString("You are a senior Kubernetes platform engineer reviewing a deployment plan before it is applied to a cluster.\n\n")
+	fmt.Fprintf(&sb, "The plan deploys %d wave(s) to namespace %q with a per-resource timeout of %s.\n\n",
+		len(plan.Waves), plan.Namespace, plan.Timeout)
+
+	// Inject pre-checked reference findings so Claude knows what was already found.
+	sb.WriteString(RefIssueSummary(refIssues))
+
+	sb.WriteString("Analyse the manifests below and report:\n")
+	sb.WriteString("1. **Security** — missing security contexts, running as root, privileged containers, host network/PID, overly broad RBAC.\n")
+	sb.WriteString("2. **Reliability** — missing readiness/liveness probes, absent resource requests or limits, single replicas for stateless workloads.\n")
+	sb.WriteString("3. **Wave ordering** — are dependencies (ConfigMaps, Secrets, Services) applied before the workloads that need them?\n")
+	sb.WriteString("4. **Correctness** — obvious misconfigurations (wrong port numbers, bad env var references, missing volume mounts, etc.).\n\n")
+	sb.WriteString("For each issue: state the severity (🔴 Critical / 🟡 Warning / 🔵 Info), which resource it affects, and a concrete fix.\n")
+	sb.WriteString("End with a one-line summary verdict: **Safe to apply**, **Apply with caution**, or **Do not apply**.\n\n")
+	sb.WriteString("---\n\n")
+
+	for i, wave := range plan.Waves {
+		fmt.Fprintf(&sb, "## Wave %d: %s\n\n", i+1, wave.Name)
+		for _, path := range wave.Manifests {
+			fmt.Fprintf(&sb, "### %s\n\n```yaml\n", path)
+			content, err := os.ReadFile(path)
+			if err != nil {
+				fmt.Fprintf(&sb, "# (could not read file: %v)\n", err)
+			} else {
+				sb.Write(content)
+			}
+			sb.WriteString("\n```\n\n")
+		}
+	}
+
+	return sb.String()
+}
+
+// streamAnalysis sends the plan to Claude and streams the analysis to stdout.
+// Returns false if the user declines to proceed.
+func streamAnalysis(ctx context.Context, plan applyPlan, dryRun bool) bool {
+	// ── Step 1: deterministic reference check ─────────────────────────────
+	fmt.Printf("\n%s\n", strings.Repeat("─", 60))
+	fmt.Println("Checking ConfigMap and Secret references...")
+	fmt.Printf("%s\n\n", strings.Repeat("─", 60))
+
+	refIssues := CheckRefs(plan)
+	FormatRefIssues(refIssues)
+
+	// ── Step 2: Claude analysis ────────────────────────────────────────────
+	fmt.Printf("\n%s\n", strings.Repeat("─", 60))
+	fmt.Println("Analysing manifests with Claude (streaming)...")
+	fmt.Printf("%s\n\n", strings.Repeat("─", 60))
+
+	prompt := buildAnalysisPrompt(plan, refIssues)
+
+	claude := anthropic.NewClient()
+	adaptive := anthropic.ThinkingConfigAdaptiveParam{}
+	stream := claude.Messages.NewStreaming(ctx, anthropic.MessageNewParams{
+		Model:     anthropic.ModelClaudeOpus4_7,
+		MaxTokens: 4096,
+		Thinking:  anthropic.ThinkingConfigParamUnion{OfAdaptive: &adaptive},
+		System: []anthropic.TextBlockParam{
+			{Text: "You are a senior Kubernetes platform engineer. Be concise and actionable. Use markdown formatting."},
+		},
+		Messages: []anthropic.MessageParam{
+			anthropic.NewUserMessage(anthropic.NewTextBlock(prompt)),
+		},
+	})
+
+	inThinking := false
+	for stream.Next() {
+		event := stream.Current()
+		switch ev := event.AsAny().(type) {
+		case anthropic.ContentBlockStartEvent:
+			switch ev.ContentBlock.AsAny().(type) {
+			case anthropic.ThinkingBlock:
+				inThinking = true
+				fmt.Print("\n[thinking...]\n\n")
+			case anthropic.TextBlock:
+				if inThinking {
+					fmt.Print("\n")
+					inThinking = false
+				}
+			}
+		case anthropic.ContentBlockDeltaEvent:
+			switch delta := ev.Delta.AsAny().(type) {
+			case anthropic.TextDelta:
+				fmt.Print(delta.Text)
+			}
+		}
+	}
+
+	if err := stream.Err(); err != nil {
+		fmt.Fprintf(os.Stderr, "\nerror from Claude: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("\n\n%s\n", strings.Repeat("─", 60))
+
+	if dryRun {
+		return true
+	}
+
+	fmt.Print("Proceed with apply? [Y/n] ")
+	var answer string
+	_, _ = fmt.Scanln(&answer)
+	answer = strings.ToLower(strings.TrimSpace(answer))
+	if answer != "" && answer != "y" {
+		fmt.Println("Aborted.")
+		return false
+	}
+	return true
+}
+
 func runApply(args []string) {
 	fs := flag.NewFlagSet("apply", flag.ExitOnError)
 	planFile := fs.StringP("file", "f", "", "Path to k8said plan YAML")
 	dryRun := fs.Bool("dry-run", false, "Print what would be applied without applying")
+	analyze := fs.Bool("analyze", false, "Ask Claude to review manifests before applying")
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage:
   k8said apply -f plan.yaml
   k8said apply -f plan.yaml --dry-run
+  k8said apply -f plan.yaml --analyze
 
 Flags:
 `)
@@ -125,6 +244,13 @@ Flags:
 	}
 	if plan.Timeout == "" {
 		plan.Timeout = "120s"
+	}
+
+	if *analyze {
+		ctx := context.Background()
+		if !streamAnalysis(ctx, plan, *dryRun) {
+			os.Exit(1)
+		}
 	}
 
 	fmt.Printf("\n%s\n", strings.Repeat("─", 60))

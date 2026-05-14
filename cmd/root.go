@@ -44,6 +44,7 @@ Usage:
   k8said diagnose --all     [flags]   diagnose all broken pods in namespace
   k8said preflight -f <manifest>       check for immutable field conflicts before applying
   k8said apply    -f <plan.yaml>       apply manifests in ordered waves
+  k8said apply    -f <plan.yaml> --analyze   AI review before applying
 
 Examples:
   k8said diagnose crash-loop-abc123 --namespace k8s-diagnose
