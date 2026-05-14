@@ -15,13 +15,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type applyPlan struct {
-	Namespace string      `yaml:"namespace"`
-	Timeout   string      `yaml:"timeout"`
-	Waves     []applyWave `yaml:"waves"`
+type wavePlan struct {
+	Namespace string     `yaml:"namespace"`
+	Timeout   string     `yaml:"timeout"`
+	Waves     []waveStep `yaml:"waves"`
 }
 
-type applyWave struct {
+type waveStep struct {
 	Name      string   `yaml:"name"`
 	Manifests []string `yaml:"manifests"`
 }
@@ -88,7 +88,7 @@ func waitForResource(r appliedResource, timeout string) error {
 
 // buildAnalysisPrompt assembles a prompt that includes the full plan structure,
 // pre-checked reference findings, and the raw YAML of every manifest.
-func buildAnalysisPrompt(plan applyPlan, refIssues []refIssue) string {
+func buildAnalysisPrompt(plan wavePlan, refIssues []refIssue) string {
 	var sb strings.Builder
 
 	sb.WriteString("You are a senior Kubernetes platform engineer reviewing a deployment plan before it is applied to a cluster.\n\n")
@@ -126,7 +126,7 @@ func buildAnalysisPrompt(plan applyPlan, refIssues []refIssue) string {
 
 // streamAnalysis sends the plan to Claude and streams the analysis to stdout.
 // Returns false if the user declines to proceed.
-func streamAnalysis(ctx context.Context, plan applyPlan, dryRun bool) bool {
+func streamAnalysis(ctx context.Context, plan wavePlan, dryRun bool) bool {
 	// ── Step 1: deterministic reference check ─────────────────────────────
 	fmt.Printf("\n%s\n", strings.Repeat("─", 60))
 	fmt.Println("Checking ConfigMap and Secret references...")
@@ -201,16 +201,16 @@ func streamAnalysis(ctx context.Context, plan applyPlan, dryRun bool) bool {
 	return true
 }
 
-func runApply(args []string) {
-	fs := flag.NewFlagSet("apply", flag.ExitOnError)
+func runWave(args []string) {
+	fs := flag.NewFlagSet("wave", flag.ExitOnError)
 	planFile := fs.StringP("file", "f", "", "Path to k8said plan YAML")
 	dryRun := fs.Bool("dry-run", false, "Print what would be applied without applying")
 	analyze := fs.Bool("analyze", false, "Ask Claude to review manifests before applying")
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage:
-  k8said apply -f plan.yaml
-  k8said apply -f plan.yaml --dry-run
-  k8said apply -f plan.yaml --analyze
+  k8said wave -f plan.yaml
+  k8said wave -f plan.yaml --dry-run
+  k8said wave -f plan.yaml --analyze
 
 Flags:
 `)
@@ -232,7 +232,7 @@ Flags:
 		os.Exit(1)
 	}
 
-	var plan applyPlan
+	var plan wavePlan
 	if err := yaml.Unmarshal(data, &plan); err != nil {
 		fmt.Fprintf(os.Stderr, "error parsing plan: %v\n", err)
 		os.Exit(1)
@@ -254,7 +254,7 @@ Flags:
 	}
 
 	fmt.Printf("\n%s\n", strings.Repeat("─", 60))
-	fmt.Printf("  k8said apply — %d wave(s)   timeout: %s", len(plan.Waves), plan.Timeout)
+	fmt.Printf("  k8said wave — %d wave(s)   timeout: %s", len(plan.Waves), plan.Timeout)
 	if plan.Namespace != "" {
 		fmt.Printf("   namespace: %s", plan.Namespace)
 	}

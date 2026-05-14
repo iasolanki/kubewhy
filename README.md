@@ -108,7 +108,7 @@ k8said preflight -f deploy.yaml -n staging --fix
 helm template my-release ./chart | k8said preflight -f -
 ```
 
-### apply
+### wave
 
 Apply manifests in ordered waves. Write a plan file:
 
@@ -136,11 +136,11 @@ waves:
 Then apply:
 
 ```bash
-k8said apply -f plan.yaml
-k8said apply -f plan.yaml --dry-run
+k8said wave -f plan.yaml
+k8said wave -f plan.yaml --dry-run
 
 # AI review before applying
-k8said apply -f plan.yaml --analyze
+k8said wave -f plan.yaml --analyze
 ```
 
 `--analyze` sends every manifest to Claude before touching the cluster. Claude checks for security issues, missing probes and resource limits, incorrect wave ordering, and obvious misconfigurations, then gives a verdict (**Safe to apply** / **Apply with caution** / **Do not apply**) and prompts you to confirm before proceeding.

@@ -1,5 +1,5 @@
 #!/bin/bash
-# apply_example.sh — demonstrates k8said apply with ordered wave deployment
+# wave_example.sh — demonstrates k8said wave with ordered wave deployment
 #
 # Deploys a realistic 3-tier app in dependency order:
 #
@@ -8,14 +8,14 @@
 #   Wave 3 — app:            web Deployment + Service (waits until ready)
 #
 # Usage:
-#   chmod +x apply_example.sh
-#   ./apply_example.sh
+#   chmod +x wave_example.sh
+#   ./wave_example.sh
 #
 #   # Dry-run (no changes applied):
-#   ./apply_example.sh --dry-run
+#   ./wave_example.sh --dry-run
 #
 #   # AI analysis before applying:
-#   ./apply_example.sh --analyze
+#   ./wave_example.sh --analyze
 
 set -euo pipefail
 
@@ -41,7 +41,7 @@ command -v "$K8SAID" &>/dev/null || { echo "'$K8SAID' not found — run: go inst
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
-echo "║   k8said apply — example script         ║"
+echo "║   k8said wave — example script         ║"
 echo "╚══════════════════════════════════════════╝"
 
 # ── write manifests to a temp directory ───────────────────────────────────────
@@ -222,8 +222,8 @@ EOF
 step "Plan"
 cat "$PLAN"
 
-# ── run k8said apply ───────────────────────────────────────────────────────────
-step "Running k8said apply"
+# ── run k8said wave ───────────────────────────────────────────────────────────
+step "Running k8said wave"
 
 "$K8SAID" apply -f "$PLAN" ${DRY_RUN} ${ANALYZE}
 
@@ -261,6 +261,6 @@ echo "      manifests:"
 echo "        - manifests/deployment.yaml"
 echo "        - manifests/service.yaml"
 echo ""
-echo "  k8said apply -f plan.yaml"
-echo "  k8said apply -f plan.yaml --dry-run"
+echo "  k8said wave -f plan.yaml"
+echo "  k8said wave -f plan.yaml --dry-run"
 echo ""
