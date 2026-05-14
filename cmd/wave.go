@@ -16,8 +16,8 @@ import (
 )
 
 type wavePlan struct {
-	Namespace string      `yaml:"namespace"`
-	Timeout   string      `yaml:"timeout"`
+	Namespace string     `yaml:"namespace"`
+	Timeout   string     `yaml:"timeout"`
 	Waves     []waveStep `yaml:"waves"`
 }
 
