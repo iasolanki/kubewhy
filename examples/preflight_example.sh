@@ -14,7 +14,8 @@
 set -euo pipefail
 
 NAMESPACE="k8said-preflight-demo"
-K8SAID="${K8SAID:-k8said}"   # override with K8SAID=./k8said if not in PATH
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+K8SAID="${K8SAID:-$(command -v k8said 2>/dev/null || echo "${SCRIPT_DIR}/../k8said")}"
 
 info()  { echo ""; echo "  [info] $*"; }
 ok()    { echo "  [ok]   $*"; }

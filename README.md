@@ -88,32 +88,67 @@ sudo mv k8said /usr/local/bin/
 
 ## Usage
 
+### diagnose
+
 ```bash
 # diagnose a specific pod
-k8said diagnose <pod-name> --namespace <namespace>
 k8said diagnose <pod-name> -n <namespace>
 
 # diagnose every broken pod in a namespace
-k8said diagnose --all --namespace <namespace>
+k8said diagnose --all -n <namespace>
 ```
 
-The pod name can be a full name from `kubectl get pods`:
+### preflight
+
+Check for immutable field conflicts before applying:
 
 ```bash
-kubectl get pods -n k8s-diagnose
-# NAME                            READY   STATUS             RESTARTS
-# crash-loop-5ff7b4885c-jzcn5    0/1     CrashLoopBackOff   7
-
-k8said diagnose crash-loop-5ff7b4885c-jzcn5 -n k8s-diagnose
+k8said preflight -f deploy.yaml -n staging
+k8said preflight -f deploy.yaml -n staging --fix
+helm template my-release ./chart | k8said preflight -f -
 ```
+
+### apply
+
+Apply manifests in ordered waves. Write a plan file:
+
+```yaml
+# plan.yaml
+namespace: staging
+timeout: 120s
+
+waves:
+  - name: infrastructure
+    manifests:
+      - manifests/configmap.yaml
+      - manifests/secret.yaml
+
+  - name: data
+    manifests:
+      - manifests/postgres-statefulset.yaml
+
+  - name: app
+    manifests:
+      - manifests/deployment.yaml
+      - manifests/service.yaml
+```
+
+Then apply:
+
+```bash
+k8said apply -f plan.yaml
+k8said apply -f plan.yaml --dry-run
+```
+
+Each wave blocks until all Deployments, StatefulSets, DaemonSets, and Jobs in it are healthy before the next wave starts. ConfigMaps, Secrets, Services, and other instant resources proceed immediately.
 
 ## Local test cluster
 
-Two helper scripts spin up a disposable minikube cluster pre-loaded with broken workloads:
+Two helper scripts in `examples/` spin up a disposable minikube cluster pre-loaded with broken workloads:
 
 ```bash
 # 1. Start a local minikube cluster named "k8said"
-./setup_minikube.sh
+./examples/setup_minikube.sh
 
 # 2. Deploy seven intentionally broken pods to the k8s-diagnose namespace
 ./examples/setup_broken_pods.sh
